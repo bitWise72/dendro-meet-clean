@@ -1,0 +1,7 @@
+project_id = "pevkzdxdxfxvpbuskgqr"
+
+[functions.livekit-token]
+verify_jwt = false
+ 
+ [functions.generate-tools]
+ verify_jwt = false
