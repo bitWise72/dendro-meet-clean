@@ -323,14 +323,9 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
 
   const deleteTool = useCallback((toolId: string) => {
     setMessages(prev => prev.filter(msg => {
-      // If message has this tool
       if (msg.tools?.some(t => t.id === toolId)) {
-        // If it sends a tool, check if it has other tools
         const remainingTools = msg.tools.filter(t => t.id !== toolId);
-        // If no tools left, remove the whole message (linked deletion)
         if (remainingTools.length === 0) return false;
-
-        // Update the message with remaining tools
         msg.tools = remainingTools;
         return true;
       }
@@ -338,6 +333,9 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
     }));
     toast.success("Tool removed");
   }, []);
+
+  const localToolIds = new Set(messages.flatMap(m => m.tools?.map(t => t.id) || []));
+  const remoteOnlyTools = collaboration.sharedTools.filter(st => !localToolIds.has(st.id));
 
 
   useEffect(() => {
@@ -513,6 +511,28 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
         <div className="flex items-center gap-2 text-muted-foreground animate-fade-in">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm">Generating tools</span>
+        </div>
+      )}
+
+      {remoteOnlyTools.length > 0 && (
+        <div className="space-y-3 border-t border-border pt-4 mt-4">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Users className="h-3.5 w-3.5" />
+            <span>Shared by others</span>
+          </div>
+          {remoteOnlyTools.map((sharedTool, idx) => (
+            <ToolComponent
+              key={sharedTool.id}
+              tool={{
+                id: sharedTool.id,
+                type: sharedTool.type as ToolType,
+                props: sharedTool.props as any,
+              }}
+              onEvent={handleToolEvent(sharedTool.id, sharedTool.type)}
+              isChainActive={activeChainId !== null}
+              animationDelay={idx * 150}
+            />
+          ))}
         </div>
       )}
     </div>
