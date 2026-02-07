@@ -20,6 +20,7 @@ interface VideoRoomProps {
   serverUrl?: string;
   onRoomJoined?: (roomName: string, participantName: string) => void;
   onRoomLeft?: () => void;
+  children?: React.ReactNode;
 }
 
 function VideoGrid() {
@@ -38,7 +39,7 @@ function VideoGrid() {
   );
 }
 
-export function VideoRoom({ serverUrl, onRoomJoined, onRoomLeft }: VideoRoomProps) {
+export function VideoRoom({ serverUrl, onRoomJoined, onRoomLeft, children }: VideoRoomProps) {
   const [token, setToken] = useState<string | null>(null);
   const [roomName, setRoomName] = useState("dendro-room");
   const [participantName, setParticipantName] = useState("");
@@ -158,40 +159,47 @@ export function VideoRoom({ serverUrl, onRoomJoined, onRoomLeft }: VideoRoomProp
       onDisconnected={handleDisconnect}
       data-lk-theme="default"
       className="h-full livekit-meet"
-      style={{ 
+      style={{
         '--lk-bg': 'hsl(var(--background))',
         '--lk-bg2': 'hsl(var(--muted))',
         '--lk-accent-fg': 'hsl(var(--primary-foreground))',
         '--lk-accent-bg': 'hsl(var(--primary))',
       } as React.CSSProperties}
     >
-      <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <Video className="h-4 w-4 text-primary" />
-            <RoomName className="text-sm font-medium text-foreground" />
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Users className="h-3.5 w-3.5" />
-            <span>Live</span>
-          </div>
-        </div>
-        <div className="flex-1 min-h-0 bg-background">
-          <VideoGrid />
-        </div>
-        <ControlBar 
-          variation="minimal" 
-          controls={{
-            microphone: true,
-            camera: true,
-            screenShare: true,
-            leave: true,
-          }}
-          className="border-t border-border bg-background/80 backdrop-blur-sm"
-        />
-      </div>
+      {children || <VideoMainInterface />}
+
       <RoomAudioRenderer />
     </LiveKitRoom>
+  );
+}
+
+export function VideoMainInterface() {
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <Video className="h-4 w-4 text-primary" />
+          <RoomName className="text-sm font-medium text-foreground" />
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Users className="h-3.5 w-3.5" />
+          <span className="text-xs">Live</span>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 bg-background">
+        <VideoGrid />
+      </div>
+      <ControlBar
+        variation="minimal"
+        controls={{
+          microphone: true,
+          camera: true,
+          screenShare: true,
+          leave: true,
+        }}
+        className="border-t border-border bg-background/80 backdrop-blur-sm"
+      />
+    </div>
   );
 }
 

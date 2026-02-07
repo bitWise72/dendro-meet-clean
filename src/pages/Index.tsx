@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { VideoRoom } from "@/components/VideoRoom";
+import { VideoRoom, VideoMainInterface } from "@/components/VideoRoom";
 import { GenerativeCanvas } from "@/components/GenerativeCanvas";
 import { Video, Sparkles } from "lucide-react";
 import { LogoWithText } from "@/components/Logo";
@@ -67,21 +67,23 @@ const Index = () => {
       </header>
 
       <main className="flex-1 min-h-0">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full border-r border-border">
-              <VideoRoom
-                serverUrl={serverUrl || undefined}
-                onRoomJoined={handleRoomJoined}
-                onRoomLeft={handleRoomLeft}
-              />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle className="w-px bg-border hover:bg-primary/50 transition-colors" />
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <GenerativeCanvas roomName={roomName} participantName={participantName} />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        <VideoRoom
+          serverUrl={serverUrl || undefined}
+          onRoomJoined={handleRoomJoined}
+          onRoomLeft={handleRoomLeft}
+        >
+          <ResizablePanelGroup direction="horizontal" className="h-full">
+            <ResizablePanel defaultSize={50} minSize={30}>
+              <div className="h-full border-r border-border">
+                <VideoMainInterface />
+              </div>
+            </ResizablePanel>
+            <ResizableHandle className="w-px bg-border hover:bg-primary/50 transition-colors" />
+            <ResizablePanel defaultSize={50} minSize={30}>
+              <GenerativeCanvas roomName={roomName} participantName={participantName} />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </VideoRoom>
       </main>
     </div>
   );
