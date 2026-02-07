@@ -20,7 +20,7 @@ import { TranscriptPanel } from "./TranscriptPanel";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useEventChain, ChainRule } from "@/hooks/useEventChain";
-import { useCollaboration } from "@/hooks/useCollaboration";
+import { useLiveKitSync, SharedTool } from "@/hooks/useLiveKitSync";
 import { parseIntent } from "@/lib/intent-engine";
 
 import { QRCodeSVG } from "qrcode.react";
@@ -273,14 +273,10 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<
-    { role: "user" | "assistant"; content: string }[]
-  >([]);
-
   const scrollRef = useRef<HTMLDivElement>(null);
 
 
-  const collaboration = useCollaboration(roomName, participantName);
+  const sync = useLiveKitSync();
 
 
   const handleChainTriggered = useCallback((targetType: string, props: any, rule: ChainRule) => {
@@ -301,8 +297,8 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
     setMessages(prev => [...prev, chainMessage]);
 
 
-    if (collaboration.isConnected) {
-      collaboration.broadcastTool({
+    if (sync.isConnected) {
+      sync.sendTool({
         id: chainedTool.id,
         type: chainedTool.type,
         props: chainedTool.props,
@@ -310,7 +306,7 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
     }
 
     toast.success("Event chain triggered!");
-  }, [collaboration]);
+  }, [sync]);
 
   const { emitEvent, activeChainId } = useEventChain(handleChainTriggered);
 
@@ -335,38 +331,50 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
   }, []);
 
   const localToolIds = new Set(messages.flatMap(m => m.tools?.map(t => t.id) || []));
-  const remoteOnlyTools = collaboration.sharedTools.filter(st => !localToolIds.has(st.id));
+  const remoteOnlyTools = sync.sharedTools.filter(st => !localToolIds.has(st.id));
 
+  // Listen for remote commands (e.g. from mobile remote)
+  useEffect(() => {
+    const handleRemoteCommand = (e: CustomEvent) => {
+      const { type, params } = e.detail;
 
+      if (type === "create-tool") {
+        processInput(`create a ${params.type} ${params.topic ? `about ${params.topic}` : ""}`);
+      } else if (type === "rotate-3d") {
+        // Find last 3D tool
+        const lastToolID = messages.slice().reverse().find(m =>
+          m.tools?.some(t => t.type.includes("3D") || t.type === "dataCube" || t.type === "globe3D")
+        )?.tools?.[0]?.id;
+
+        if (lastToolID) {
+          // We can't update props directly via sync yet, but we can trigger a re-render or local update
+          // For now, this is a limitation until we add full state sync
+          // A better approach would be to broadcast a "tool-update" event
+          console.log("3D rotation received", params);
+        }
+      }
+    };
+
+    window.addEventListener("remote-command" as any, handleRemoteCommand);
+    return () => window.removeEventListener("remote-command" as any, handleRemoteCommand);
+  }, [messages, sync]);
+
+  // Listen for Supabase remote commands (for mobile compatibility)
   useEffect(() => {
     if (!roomName) return;
-
     const channel = supabase.channel(`canvas-${roomName}`);
-
     const sub = channel
       .on("broadcast", { event: "remote-command" }, ({ payload }) => {
-        const { type, params } = payload;
-        if (type === "create-tool") {
-          processInput(`create a ${params.type} ${params.topic ? `about ${params.topic}` : ""}`);
-        } else if (type === "rotate-3d") {
-
-          const lastTool = messages.flatMap(m => m.tools || []).filter(t => t.type.includes("3D") || t.type === "dataCube" || t.type === "globe3D").pop();
-          if (lastTool) {
-            collaboration.updateToolState(lastTool.id, {
-              props: {
-                ...lastTool.props,
-                rotation: [params.y * Math.PI, params.x * Math.PI, 0]
-              }
-            });
-          }
-        }
+        // Dispatch to the same handler above
+        window.dispatchEvent(new CustomEvent("remote-command", { detail: payload }));
       })
       .subscribe();
 
     return () => {
       sub.unsubscribe();
     };
-  }, [roomName, messages, collaboration]);
+  }, [roomName]);
+
 
   const processInput = async (text: string) => {
     if (!text.trim() || isProcessing) return;
@@ -406,9 +414,9 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
       setMessages((prev) => [...prev, assistantMessage]);
 
 
-      if (data.tools && collaboration.isConnected) {
+      if (data.tools && sync.isConnected) {
         data.tools.forEach((tool: ToolData) => {
-          collaboration.broadcastTool({
+          sync.sendTool({
             id: tool.id,
             type: tool.type,
             props: tool.props,
@@ -434,8 +442,8 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
         };
 
         setMessages(prev => [...prev, assistantMessage]);
-        if (collaboration.isConnected) {
-          collaboration.broadcastTool(tool);
+        if (sync.isConnected) {
+          sync.sendTool(tool);
         }
       } else {
         toast.error("Failed to connect to AI service");
@@ -593,10 +601,10 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
             <span className="text-xs">Auto</span>
           </Button>
 
-          {collaboration.isConnected && (
+          {sync.isConnected && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Users className="h-3.5 w-3.5 text-primary" />
-              <span>{collaboration.participants.length}</span>
+              <span className="text-xs">Live</span>
             </div>
           )}
         </div>
