@@ -96,7 +96,7 @@ function CubeFace({
 export function DataCube({
   data = DEFAULT_DATA,
   size = 1.5,
-  autoRotate = true,
+  autoRotate = false,
   rotation,
 }: DataCubeProps) {
   const cubeRef = useRef<THREE.Group>(null);

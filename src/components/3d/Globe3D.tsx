@@ -28,12 +28,12 @@ function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector
   return new THREE.Vector3(x, y, z);
 }
 
-function GlobeMarkerPoint({ 
-  marker, 
+function GlobeMarkerPoint({
+  marker,
   radius,
-  onClick 
-}: { 
-  marker: GlobeMarker; 
+  onClick
+}: {
+  marker: GlobeMarker;
   radius: number;
   onClick?: () => void;
 }) {
@@ -76,10 +76,10 @@ function GlobeMarkerPoint({
   );
 }
 
-export function Globe3D({ 
-  markers = [], 
-  autoRotate = true,
-  onMarkerClick 
+export function Globe3D({
+  markers = [],
+  autoRotate = false,
+  onMarkerClick
 }: Globe3DProps) {
   const globeRef = useRef<THREE.Group>(null);
   const radius = 1;

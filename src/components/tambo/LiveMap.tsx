@@ -94,9 +94,8 @@ export function LiveMap({ markers, onMarkerClick }: LiveMapProps) {
       });
     });
 
-    if (markers.length > 0) {
-      leafletMapRef.current.setView([markers[0].lat, markers[0].lng], markers.length === 1 ? 13 : 4);
-    }
+    // Only set view on initial load, not subsequent updates
+    // if (markers.length > 0) { ... }
   }, [markers, isLoaded]);
 
   return (
