@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { VideoRoom, VideoMainInterface } from "@/components/VideoRoom";
 import { GenerativeCanvas } from "@/components/GenerativeCanvas";
-import { Video, Sparkles } from "lucide-react";
+import { Video, Sparkles, Play } from "lucide-react";
 import { LogoWithText } from "@/components/Logo";
 
 const Index = () => {
@@ -63,6 +63,17 @@ const Index = () => {
             </div>
             <span>Tambo Orchestrator</span>
           </div>
+          <a
+            href="https://youtu.be/ptC1C5k1jOo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer group ml-2"
+          >
+            <div className="p-1 px-2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
+              <Play className="h-3.5 w-3.5 fill-current" />
+            </div>
+            <span>Watch Demo</span>
+          </a>
         </div>
       </header>
 

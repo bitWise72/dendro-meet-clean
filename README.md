@@ -2,6 +2,10 @@
 
 Dendro-Meet is a collaborative meeting platform designed to integrate real-time communication with automated orchestration. It uses Tambo AI to manage tools and visualizations during live sessions.
 
+[**Live Demo**](https://dendro-meet.vercel.app/)
+
+[![Watch the Demo](https://img.youtube.com/vi/ptC1C5k1jOo/0.jpg)](https://www.youtube.com/watch?v=ptC1C5k1jOo)
+
 ## Overview
 
 The platform combines video conferencing with a dynamic interface that adapts to the conversation. It includes features for real-time polling, data visualization, and interactive 3D elements, all managed by an intelligent backend system.
