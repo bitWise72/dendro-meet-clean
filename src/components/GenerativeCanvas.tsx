@@ -100,7 +100,7 @@ function ToolComponent({ tool, onEvent, isChainActive, animationDelay = 0, onDel
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), animationDelay);
+    const timer = setTimeout(() => setIsVisible(true), animationDelay + 300);
     return () => clearTimeout(timer);
   }, [animationDelay]);
 
@@ -226,9 +226,10 @@ function ToolComponent({ tool, onEvent, isChainActive, animationDelay = 0, onDel
   return (
     <div
       className={cn(
-        "tool-3d-container",
-        !isVisible && "opacity-0",
-        isVisible && (tool.isChained ? "tool-flip-enter" : "tool-bounce-enter"),
+        "tool-3d-container transform transition-all duration-700 ease-out",
+        !isVisible && "opacity-0 translate-y-8 scale-95",
+        isVisible && "opacity-100 translate-y-0 scale-100",
+        isVisible && tool.isChained && "tool-flip-enter",
         isChainActive && "tool-chain-active"
       )}
     >
@@ -321,10 +322,20 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
 
 
   const deleteTool = useCallback((toolId: string) => {
-    setMessages(prev => prev.map(msg => ({
-      ...msg,
-      tools: msg.tools?.filter(t => t.id !== toolId)
-    })));
+    setMessages(prev => prev.filter(msg => {
+      // If message has this tool
+      if (msg.tools?.some(t => t.id === toolId)) {
+        // If it sends a tool, check if it has other tools
+        const remainingTools = msg.tools.filter(t => t.id !== toolId);
+        // If no tools left, remove the whole message (linked deletion)
+        if (remainingTools.length === 0) return false;
+
+        // Update the message with remaining tools
+        msg.tools = remainingTools;
+        return true;
+      }
+      return true;
+    }));
     toast.success("Tool removed");
   }, []);
 
@@ -573,13 +584,13 @@ export function GenerativeCanvas({ roomName = "", participantName = "" }: Genera
 
 
       {showTranscript ? (
-        <ResizablePanelGroup direction="vertical" className="flex-1">
-          <ResizablePanel defaultSize={25} minSize={10} className="bg-background/50">
+        <ResizablePanelGroup direction="vertical" className="flex-1 md:flex-col">
+          <ResizablePanel defaultSize={25} minSize={10} className="bg-background/50 hidden md:block">
             <TranscriptPanel
               onTranscript={processInput}
             />
           </ResizablePanel>
-          <ResizableHandle className="h-1 bg-border hover:bg-primary/50 transition-colors cursor-row-resize" />
+          <ResizableHandle className="h-1 bg-border hover:bg-primary/50 transition-colors cursor-row-resize hidden md:flex" />
           <ResizablePanel defaultSize={75} minSize={30}>
             <ScrollArea className="h-full p-4" ref={scrollRef}>
               {workbenchContent}
